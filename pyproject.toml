@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyrpc"
+dynamic = ["version"]
+description = "Python client for an Arduino RPC bridge using MsgPack over serial."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+  { name = "Luca Macavero" },
+]
+license = { text = "MIT" }
+keywords = ["arduino", "teensyduino", "rpc", "serial", "msgpack"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "pyserial",
+  "msgpack",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/lu-maca/pyrpc"
+
+[tool.setuptools]
+package-dir = {"" = "py"}
+
+[tool.setuptools.packages.find]
+where = ["py"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pyrpc.__version__" }

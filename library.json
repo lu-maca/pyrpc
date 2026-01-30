@@ -1,0 +1,22 @@
+{
+    "name": "pyrpc",
+    "keywords": "rpc,serial,msgpack",
+    "description": "A simple RPC framework for exporting Arduino functions to a Python client.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/lu-maca/pyrpc.git"
+    },
+    "authors": {
+        "name": "Luca Macavero",
+        "url": "https://github.com/lu-maca",
+        "maintainer": true
+    },
+    "version": "0.0.1'",
+    "license": "MIT",
+    "frameworks": "arduino",
+    "platforms": "*",
+    "dependencies":
+    {
+        "hideakitai/MsgPack": ">=0.4.2",
+    }
+}
