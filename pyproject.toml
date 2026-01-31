@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ardupyrpc"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python client for an Arduino RPC bridge using MsgPack over serial."
 readme = "README.md"
 requires-python = ">=3.8"
