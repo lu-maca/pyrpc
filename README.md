@@ -1,4 +1,4 @@
-# py_arduino_rpc
+# pyrpc
 
 A tiny RPC bridge between Arduino and Python using MsgPack over serial.
 
