@@ -1,4 +1,4 @@
-from pyrpc import Rpc
+from ardupyrpc import Rpc
 
 pyrpc = Rpc("/dev/ttyACM0")
 
