@@ -52,6 +52,8 @@ class Rpc:
         for value in args:
             payload += msgpack.packb(value, use_bin_type=True)
 
+        # pack length before sending in a uint16_t
+        payload = len(payload).to_bytes(2, byteorder="big") + payload
         self._ser.write(payload)
         self._ser.flush()
 
@@ -65,16 +67,26 @@ class Rpc:
             - the single object if exactly one is present
             - a list of objects if multiple objects are present
         """
+        # first read the 2-byte big-endian length prefix
+        header = self._ser.read(2)
+        if len(header) < 2:
+            return None
+
+        expected_len = int.from_bytes(header, byteorder="big")
+        if expected_len <= 0:
+            return None
+
+        # then read exactly that many bytes (or until timeout)
         raw = b""
-        while True:
-            # read at least 1 byte, or everything currently buffered
-            to_read = self._ser.in_waiting or 1
+        while len(raw) < expected_len:
+            to_read = expected_len - len(raw)
             chunk = self._ser.read(to_read)
             if not chunk:
                 break
             raw += chunk
 
-        if not raw:
+        if len(raw) != expected_len:
+            # incomplete message (e.g. timeout); ignore
             return None
 
         unpacker = msgpack.Unpacker(raw=False)

@@ -6,8 +6,7 @@ It lets you expose C++ functions on an Arduino board and call them directly from
 
 ## Arduino side
 
-1. Install the Arduino MsgPack library (e.g. via Library Manager).
-2. Include the RPC header and register your functions:
+Install `pyrpc` from the Arduino Library Manager.
 
 ```cpp
 #include <pyrpc.h>
@@ -40,13 +39,13 @@ Upload this sketch to your Arduino (baudrate must match the Python side).
 Install the Python package:
 
 ```bash
-pip install ardupyrpc
+pip install pyrpc
 ```
 
 Call your Arduino procedures from Python:
 
 ```python
-from ardupyrpc import Rpc
+from pyrpc import Rpc
 
 rpc = Rpc("/dev/ttyACM0", baudrate=115200)
 
@@ -59,3 +58,6 @@ rpc.close()
 ```
 
 A more complete example is available in the `examples/` folder.
+
+## Current limitations
+When STL containers are not supported, there is a limation of 128 bytes for the serialized data. This means that complex nested structures may not work as expected and the `help` command may fail to retrieve the full documentation.
