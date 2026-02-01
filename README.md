@@ -40,13 +40,13 @@ Upload this sketch to your Arduino (baudrate must match the Python side).
 Install the Python package:
 
 ```bash
-pip install pyrpc
+pip install ardupyrpc
 ```
 
 Call your Arduino procedures from Python:
 
 ```python
-from pyrpc import Rpc
+from ardupyrpc import Rpc
 
 rpc = Rpc("/dev/ttyACM0", baudrate=115200)
 
