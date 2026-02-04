@@ -21,7 +21,7 @@ void setup() {
 	pyrpc::begin();  
 
 	// register an onConnect procedure (called when Python connects)
-	pyrpc::registerOnConnect([]() {
+	pyrpc::onConnect([]() {
 		// do whatever you need here
 	});
 
