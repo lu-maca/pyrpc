@@ -15,23 +15,31 @@ class Rpc:
     - no automatic response handling: ``call()`` is fire-and-forget.
     """
 
-    def __init__(self, device: str, baudrate: int = 115200, timeout: float = 1.0) -> None:
+    def __init__(self, device: str, baudrate: int = 115200, timeout: float = 1.0, on_connect: bool = False) -> None:
         """Initialize the serial connection.
 
         :param device: e.g. '/dev/ttyACM0'
         :param baudrate: typically 115200, must match the Arduino sketch
         :param timeout: read timeout in seconds
+        :param on_connect: if True, send an onConnect message to the server after connecting
         """
         self._ser = serial.Serial(device, baudrate, timeout=timeout)
         time.sleep(0.1)
-        
         # ask the server for all the available procedures
         self._help = self.call("help")
+
+        # send the onConnect message. This calls on the board whatever is registered as onConnect
+        if on_connect:
+            on_connect_message = b"\x00\x00\x00"
+            self._ser.write(on_connect_message)  
+            self._ser.flush()
 
     def call(self, procedure: str, *args: Any) -> Any:
         """Send an RPC call and return the decoded response.
 
                 We encode as a MsgPack sequence:
+                - first byte: 0x01 (indicates an RPC call)
+                - next 2 bytes: big-endian uint16_t length of the payload
                 - first object: procedure name (string)
                 - following objects (if any): each positional argument value,
                     packed in the order provided via *args
@@ -53,8 +61,9 @@ class Rpc:
             payload += msgpack.packb(value, use_bin_type=True)
 
         # pack length before sending in a uint16_t
-        payload = len(payload).to_bytes(2, byteorder="big") + payload
-        self._ser.write(payload)
+        header = b"\x01" + len(payload).to_bytes(2, byteorder="big")
+        message = header + payload
+        self._ser.write(message)
         self._ser.flush()
 
         return self._read_response()

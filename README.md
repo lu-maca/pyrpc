@@ -20,7 +20,12 @@ void setup() {
 
 	pyrpc::begin();  
 
-	pyrpc::register_rpc(
+	// register an onConnect procedure (called when Python connects)
+	pyrpc::registerOnConnect([]() {
+		// do whatever you need here
+	});
+
+	pyrpc::registerRpc(
 		"sum",
 		sum,
 		F("@brief sum two numbers @return double @arg i integer @arg d float")
@@ -47,7 +52,8 @@ Call your Arduino procedures from Python:
 ```python
 from ardupyrpc import Rpc
 
-rpc = Rpc("/dev/ttyACM0", baudrate=115200)
+# on_connect=True sends an onConnect message to the Arduino after connecting
+rpc = Rpc("/dev/ttyACM0", baudrate=115200, on_connect=True)
 
 print(rpc.help)  # shows all available remote procedures
 

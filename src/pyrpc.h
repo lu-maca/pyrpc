@@ -3,7 +3,10 @@
 #include <MsgPack.h>
 
 namespace pyrpc {
+using onConnectCb_t = arx::stdx::function<void()>;
+
 namespace internals {
+constexpr int HEADER_LENGTH = 3;
 
 struct RpcEntry {
   void *func;
@@ -11,8 +14,23 @@ struct RpcEntry {
   const __FlashStringHelper *description;
 };
 
+struct RpcRequest {
+  MsgPack::str_t call;
+};
+
+enum class Id {
+  on_connect,
+  generic,
+  error
+};
+
+struct RpcHeader {
+  uint16_t len;
+};
+
 static inline MsgPack::Packer packer;
 static inline MsgPack::Unpacker unpacker;
+static inline onConnectCb_t on_connect_cb = nullptr;
 // map_t is defined in MsgPack/Types.h and already takes care about std::map existance
 // Same is true for MsgPack::str_t
 static inline MsgPack::map_t<MsgPack::str_t, RpcEntry> rpc_table{};
@@ -84,7 +102,7 @@ void dispatch(const MsgPack::str_t name) {
 } // namespace internals
 
 template <typename R, typename... Args>
-void register_rpc(const MsgPack::str_t name, R (*func)(Args...),
+void registerRpc(const MsgPack::str_t name, R (*func)(Args...),
                   const __FlashStringHelper *description) {
   const internals::RpcEntry entry {
     .func = reinterpret_cast<void *>(func),
@@ -100,60 +118,74 @@ inline void begin() {
     static MsgPack::str_t call() {
       MsgPack::str_t descr;
       for (const auto &[key, val] : internals::rpc_table) {
-        descr += "@entry " + key + " - " + val.description + "\n";
+        descr.concat(F("@entry "));
+        descr.concat(key);
+        descr.concat(F(" - "));
+        descr.concat(val.description);
+        descr.concat('\n');
       }
       return descr;
     }
   };
-  register_rpc("help", &Help::call,
+  registerRpc("help", &Help::call,
                F("@brief Built-in method describing all available procedures"));
 }
 
-inline void process() {
-  struct RpcRequest {
-    MsgPack::str_t call;
-  };
+inline void onConnect(onConnectCb_t cb) {
+  internals::on_connect_cb = cb;
+}
 
-  static uint16_t len = 0;
+inline void process() {
   static uint8_t header_bytes = 0;
   static MsgPack::bin_t<uint8_t> rcv;
+  static MsgPack::fix_arr_t<uint8_t, internals::HEADER_LENGTH> rcv_header;
+  static internals::RpcHeader header;
 
   if (!Serial.available()) {
     return;
   }
 
-  // read header
-  while (Serial.available() && header_bytes < 2) {
+  // read header 
+  while (Serial.available() && header_bytes < internals::HEADER_LENGTH) {
     uint8_t b = Serial.read();
-    len = (len << 8) | b;
+    rcv_header[header_bytes] = b;
     header_bytes++;
   }
 
-  if (header_bytes < 2) {
+  if (header_bytes < internals::HEADER_LENGTH) {
     // incomplete header 
     return; 
   }
 
-  // read payload
-  while (Serial.available() && rcv.size() < len) {
-    rcv.push_back(Serial.read());
+  // if on_connect command, call the on_connect hook
+  if (rcv_header[0] == static_cast<uint8_t>(internals::Id::on_connect)) {
+    if (internals::on_connect_cb) internals::on_connect_cb();
+
+  } else {
+    header.len = rcv_header[1] << 8 | rcv_header[2];
+    // read payload
+    while (Serial.available() && rcv.size() < header.len) {
+      rcv.push_back(Serial.read());
+    }
+
+    if (rcv.size() < header.len) {
+      // incomplete payload
+      return; 
+    }
+
+    internals::unpacker.clear();
+    internals::unpacker.feed(rcv.data(), rcv.size());
+
+    internals::RpcRequest request;
+    internals::unpacker.deserialize(request.call);
+    internals::dispatch(request.call);
+
   }
-
-  if (rcv.size() < len) {
-    // incomplete payload
-    return; 
-  }
-
-  internals::unpacker.clear();
-  internals::unpacker.feed(rcv.data(), rcv.size());
-
-  RpcRequest request;
-  internals::unpacker.deserialize(request.call);
-  internals::dispatch(request.call);
-
+  
   // reset current state for next message
-  len = 0;
+  header.len = 0;
   header_bytes = 0;
+  rcv_header[0] = rcv_header[1] = rcv_header[2] = 0;
   rcv.clear();
 }
 

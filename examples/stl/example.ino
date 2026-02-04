@@ -44,11 +44,11 @@ void setup() {
   // begin the pyrpc library
   pyrpc::begin();
 
-  pyrpc::register_rpc("sum", sum, F("@brief sum the two arguments @return double @arg i is an integer @arg d is a float"));
-  pyrpc::register_rpc("my_struct", my_struct, F("@brief create an object and return it @return MyStruct"));
-  pyrpc::register_rpc("map_vector", map_vector, F("@brief create a complex map and return it @return std::map<String, std::vector<int>> "));
-  pyrpc::register_rpc("complex_struct", complex_struct, F("@brief A very complex struct @return std::map<String, MyStruct> @arg std::vector<int>"));
-  pyrpc::register_rpc("prod_int", prod<int>, F("@brief Perform the product between two integers @return int @arg a @arg b"));
+  pyrpc::registerRpc("sum", sum, F("@brief sum the two arguments @return double @arg i is an integer @arg d is a float"));
+  pyrpc::registerRpc("my_struct", my_struct, F("@brief create an object and return it @return MyStruct"));
+  pyrpc::registerRpc("map_vector", map_vector, F("@brief create a complex map and return it @return std::map<String, std::vector<int>> "));
+  pyrpc::registerRpc("complex_struct", complex_struct, F("@brief A very complex struct @return std::map<String, MyStruct> @arg std::vector<int>"));
+  pyrpc::registerRpc("prod_int", prod<int>, F("@brief Perform the product between two integers @return int @arg a @arg b"));
 }
 
 void loop() {
