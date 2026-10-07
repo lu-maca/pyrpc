@@ -48,7 +48,7 @@ std::tuple<Args...> deserialize_as_tuple(MsgPack::Unpacker &u) {
   return t;
 }
 
-void reply(MsgPack::bin_t<uint8_t> packet) {
+inline void reply(MsgPack::bin_t<uint8_t> packet) {
   const uint16_t size = packet.size();
   Serial.write(static_cast<uint8_t>(size >> 8));
   Serial.write(static_cast<uint8_t>(size & 0xFF));
@@ -89,7 +89,7 @@ template <typename R, typename... Args> struct RpcWrapper {
   }
 };
 
-void dispatch(const MsgPack::str_t name) {
+inline void dispatch(const MsgPack::str_t name) {
   auto it = internals::rpc_table.find(name);
   if (it == internals::rpc_table.end()) {
     // TBD error
